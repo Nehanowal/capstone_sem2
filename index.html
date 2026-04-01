@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReelVault - Instagram Reel Organizer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>ReelVault</h1>
+            <p class="tagline">Organize your saved Instagram Reels</p>
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle dark mode">
+                <span class="theme-icon">&#9790;</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Add Reel Form -->
+    <section class="add-reel-section">
+        <div class="container">
+            <h2>Add a Reel</h2>
+            <form id="reel-form" class="reel-form">
+                <div class="form-group">
+                    <label for="reel-url">Instagram Reel URL</label>
+                    <input
+                        type="url"
+                        id="reel-url"
+                        placeholder="https://www.instagram.com/reel/XXXXXXXXX/"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="reel-category">Category</label>
+                    <select id="reel-category" required>
+                        <option value="">Select a category</option>
+                        <option value="study">Study Material</option>
+                        <option value="food">Food & Recipes</option>
+                        <option value="self-improvement">Self Improvement</option>
+                        <option value="fitness">Fitness & Health</option>
+                        <option value="travel">Travel</option>
+                        <option value="tech">Tech & Coding</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="fashion">Fashion & Beauty</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reel-note">Note (optional)</label>
+                    <input
+                        type="text"
+                        id="reel-note"
+                        placeholder="Add a short note..."
+                    >
+                </div>
+                <button type="submit" class="btn btn-primary" id="submit-btn">
+                    <span class="btn-text">Add Reel</span>
+                    <span class="btn-loader hidden">Loading...</span>
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Controls: Search, Filter, Sort -->
+    <section class="controls-section">
+        <div class="container">
+            <div class="controls">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search by author or title..."
+                    >
+                </div>
+                <div class="filter-sort">
+                    <select id="filter-category">
+                        <option value="all">All Categories</option>
+                        <option value="study">Study Material</option>
+                        <option value="food">Food & Recipes</option>
+                        <option value="self-improvement">Self Improvement</option>
+                        <option value="fitness">Fitness & Health</option>
+                        <option value="travel">Travel</option>
+                        <option value="tech">Tech & Coding</option>
+                        <option value="entertainment">Entertainment</option>
+                        <option value="fashion">Fashion & Beauty</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <select id="sort-option">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="author-az">Author A-Z</option>
+                        <option value="author-za">Author Z-A</option>
+                        <option value="favorites">Favorites First</option>
+                    </select>
+                </div>
+            </div>
+            <div class="stats">
+                <span id="reel-count">0 reels saved</span>
+                <button id="filter-favorites" class="btn btn-outline btn-small">
+                    Show Favorites
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reel Cards Grid -->
+    <main class="reels-section">
+        <div class="container">
+            <!-- Loading indicator -->
+            <div id="loading-indicator" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Fetching reel info...</p>
+            </div>
+
+            <!-- Empty state -->
+            <div id="empty-state" class="empty-state">
+                <div class="empty-icon">&#127910;</div>
+                <h3>No reels saved yet</h3>
+                <p>Paste an Instagram Reel link above to get started!</p>
+            </div>
+
+            <!-- Reels grid -->
+            <div id="reels-grid" class="reels-grid"></div>
+        </div>
+    </main>
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>ReelVault &mdash; Built with vanilla JavaScript &amp; noembed API</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

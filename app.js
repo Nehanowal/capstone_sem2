@@ -1,6 +1,10 @@
+// INITIAL SETUP - Pehle se saved reels load karo ya empty array rakho 
 let reels = JSON.parse(localStorage.getItem("reels")) || [];
 let showOnlyFavorites = false;
 
+//DOM ELEMENTS - HTML elements ko JS mein pakad rahe hain 
+
+// Form wale elements
 const reelForm = document.getElementById("reel-form");
 const reelUrlInput = document.getElementById("reel-url");
 const reelCategorySelect = document.getElementById("reel-category");
@@ -9,11 +13,13 @@ const submitBtn = document.getElementById("submit-btn");
 const btnText = submitBtn.querySelector(".btn-text");
 const btnLoader = submitBtn.querySelector(".btn-loader");
 
+// Search aur filter wale elements
 const searchInput = document.getElementById("search-input");
 const filterCategory = document.getElementById("filter-category");
 const sortOption = document.getElementById("sort-option");
 const filterFavoritesBtn = document.getElementById("filter-favorites");
 
+// UI elements
 const reelsGrid = document.getElementById("reels-grid");
 const emptyState = document.getElementById("empty-state");
 const loadingIndicator = document.getElementById("loading-indicator");
@@ -21,6 +27,8 @@ const reelCount = document.getElementById("reel-count");
 const themeToggle = document.getElementById("theme-toggle");
 const themeIcon = themeToggle.querySelector(".theme-icon");
 const toast = document.getElementById("toast");
+
+// Category ka naam dikhane ke liye mapping, key se readable nam milega
 const categoryLabels = {
     study: "Study Material",
     food: "Food & Recipes",
@@ -33,12 +41,17 @@ const categoryLabels = {
     other: "Other",
 };
 
+//THEME FUNCTIONS - Dark/Light mode ke liye 
+
+// Page load hone par saved theme lagao
 function loadTheme() {
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
+    // Dark mode mein sun icon, light mode mein moon icon dikhao
     themeIcon.textContent = savedTheme === "dark" ? "\u2600" : "\u263E";
 }
 
+// Theme toggle karo - dark se light, light se dark
 function toggleTheme() {
     const current = document.documentElement.getAttribute("data-theme");
     const next = current === "dark" ? "light" : "dark";
@@ -47,10 +60,14 @@ function toggleTheme() {
     themeIcon.textContent = next === "dark" ? "\u2600" : "\u263E";
 }
 
+// HELPER FUNCTIONS 
+
+// Reels ko localStorage mein save karo taaki page refresh par bhi rahe
 function saveReels() {
     localStorage.setItem("reels", JSON.stringify(reels));
 }
 
+// Chhota sa notification message dikhao - 2.5 second baad apne aap gayab ho jaega
 function showToast(message) {
     toast.textContent = message;
     toast.classList.remove("hidden");
@@ -64,10 +81,17 @@ function showToast(message) {
     }, 2500);
 }
 
-// ===== API: Fetch reel metadata from noembed =====
+// HTML injection se bachne ke liye special characters ko escape karo
+function escapeHTML(str) {
+    var div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+//  API CALL - Instagram reel ka data (title, author, thumbnail) fetch karo 
 function fetchReelData(url) {
-    var apiUrl =
-        "https://noembed.com/embed?url=" + encodeURIComponent(url);
+    // noembed ek free API hai jo kisi bhi URL ka metadata de deta hai
+    var apiUrl = "https://noembed.com/embed?url=" + encodeURIComponent(url);
 
     return fetch(apiUrl)
         .then(function (response) {
@@ -80,6 +104,7 @@ function fetchReelData(url) {
             if (data.error) {
                 throw new Error(data.error);
             }
+            // Jo data mila usse ek clean object bana ke return karo
             return {
                 title: data.title || "Untitled Reel",
                 author: data.author_name || "Unknown",
@@ -90,15 +115,16 @@ function fetchReelData(url) {
         });
 }
 
-// ===== ADD REEL =====
+// ===== ADD REEL - Naya reel save karo =====
 function handleAddReel(event) {
+    // Form submit hone par page reload mat karo
     event.preventDefault();
 
     var url = reelUrlInput.value.trim();
     var category = reelCategorySelect.value;
     var note = reelNoteInput.value.trim();
 
-    // Validate it looks like an Instagram URL
+    // Check karo ki URL Instagram ka hai ya nahi
     if (
         !url.includes("instagram.com/reel") &&
         !url.includes("instagram.com/p/")
@@ -107,7 +133,7 @@ function handleAddReel(event) {
         return;
     }
 
-    // Check for duplicates using find()
+    // Duplicate check - yeh reel pehle se toh nahi save hai
     var duplicate = reels.find(function (reel) {
         return reel.url === url;
     });
@@ -116,13 +142,14 @@ function handleAddReel(event) {
         return;
     }
 
-    // Show loading state
+    // Button par loading spinner dikhao
     btnText.classList.add("hidden");
     btnLoader.classList.remove("hidden");
     submitBtn.disabled = true;
 
     fetchReelData(url)
         .then(function (data) {
+            // API se data mil gaya - poori details ke saath reel banao
             var newReel = {
                 id: Date.now().toString(),
                 url: url,
@@ -143,7 +170,7 @@ function handleAddReel(event) {
             showToast("Reel added successfully!");
         })
         .catch(function () {
-            // If API fails, still save with basic info
+            // API fail ho gaya toh bhi basic info ke saath save kar do
             var newReel = {
                 id: Date.now().toString(),
                 url: url,
@@ -164,14 +191,16 @@ function handleAddReel(event) {
             showToast("Reel added (metadata unavailable)");
         })
         .finally(function () {
+            // Chahe success ho ya fail, loading spinner hatao
             btnText.classList.remove("hidden");
             btnLoader.classList.add("hidden");
             submitBtn.disabled = false;
         });
 }
 
-// ===== DELETE REEL =====
+// DELETE REEL - Reel ko list se hatao 
 function deleteReel(id) {
+    // filter se us id wali reel ko chhodke baaki sab rakho
     reels = reels.filter(function (reel) {
         return reel.id !== id;
     });
@@ -180,8 +209,9 @@ function deleteReel(id) {
     showToast("Reel removed");
 }
 
-// ===== TOGGLE FAVORITE =====
+// TOGGLE Star lagao ya hatao
 function toggleFavorite(id) {
+    // map se us reel ka favorite true/false toggle karo
     reels = reels.map(function (reel) {
         if (reel.id === id) {
             return Object.assign({}, reel, { favorite: !reel.favorite });
@@ -192,13 +222,13 @@ function toggleFavorite(id) {
     renderReels();
 }
 
-// ===== SEARCH, FILTER, SORT (using HOFs) =====
+// SEARCH, FILTER, SORT - Reels ko search/filter/sort karo
 function getFilteredReels() {
     var searchTerm = searchInput.value.trim().toLowerCase();
     var categoryFilter = filterCategory.value;
     var sortBy = sortOption.value;
 
-    // Step 1: Filter by search term using .filter()
+    // Step 1: Search - title, author ya note mein search term dhundho
     var result = reels.filter(function (reel) {
         if (searchTerm === "") return true;
         var titleMatch = reel.title.toLowerCase().includes(searchTerm);
@@ -209,21 +239,21 @@ function getFilteredReels() {
         return titleMatch || authorMatch || noteMatch;
     });
 
-    // Step 2: Filter by category using .filter()
+    // Step 2: Category filter - agar "all" nahi hai toh sirf us category ke reels dikhao
     if (categoryFilter !== "all") {
         result = result.filter(function (reel) {
             return reel.category === categoryFilter;
         });
     }
 
-    // Step 3: Filter favorites if toggled, using .filter()
+    // Step 3: Favorites filter - agar toggle on hai toh sirf favorite wale dikhao
     if (showOnlyFavorites) {
         result = result.filter(function (reel) {
             return reel.favorite === true;
         });
     }
 
-    // Step 4: Sort using .sort()
+    // Step 4: Sorting - user ne jo order choose kiya hai usse lagao
     result = result.sort(function (a, b) {
         if (sortBy === "newest") {
             return new Date(b.addedAt) - new Date(a.addedAt);
@@ -238,6 +268,7 @@ function getFilteredReels() {
             return b.author.toLowerCase().localeCompare(a.author.toLowerCase());
         }
         if (sortBy === "favorites") {
+            // Pehle favorites, phir baaki newest order mein
             if (a.favorite === b.favorite) {
                 return new Date(b.addedAt) - new Date(a.addedAt);
             }
@@ -249,12 +280,12 @@ function getFilteredReels() {
     return result;
 }
 
-// ===== RENDER REEL CARD =====
+// ===== REEL CARD BANANA - Ek reel ka card UI banao =====
 function createReelCard(reel) {
     var card = document.createElement("div");
     card.className = "reel-card";
 
-    // Format the date
+    // Date ko readable format mein convert karo (eg: "Apr 12, 2026")
     var dateObj = new Date(reel.addedAt);
     var formattedDate = dateObj.toLocaleDateString("en-US", {
         year: "numeric",
@@ -262,16 +293,17 @@ function createReelCard(reel) {
         day: "numeric",
     });
 
-    // Thumbnail or placeholder
+    // Thumbnail hai toh image dikhao, nahi toh placeholder icon
     var thumbnailHTML = reel.thumbnail
         ? '<img src="' + reel.thumbnail + '" alt="' + reel.title + '" class="card-thumbnail" onerror="this.outerHTML=\'<div class=card-thumbnail-placeholder>&#127910;</div>\'">'
         : '<div class="card-thumbnail-placeholder">&#127910;</div>';
 
-    // Note section
+    // Note hai toh dikhao, nahi toh kuch mat dikhao
     var noteHTML = reel.note
         ? '<p class="card-note">"' + escapeHTML(reel.note) + '"</p>'
         : "";
 
+    // Card ka poora HTML set karo
     card.innerHTML =
         thumbnailHTML +
         '<div class="card-body">' +
@@ -299,12 +331,13 @@ function createReelCard(reel) {
         '" target="_blank" rel="noopener noreferrer" class="open-link">Open Reel &rarr;</a>' +
         "</div>";
 
-    // Event listeners for card buttons
+    // Star button par click kare toh favorite toggle ho
     var favBtn = card.querySelector(".fav-btn");
     favBtn.addEventListener("click", function () {
         toggleFavorite(reel.id);
     });
 
+    // Delete button par click kare toh reel delete ho
     var deleteBtn = card.querySelector(".delete-btn");
     deleteBtn.addEventListener("click", function () {
         deleteReel(reel.id);
@@ -313,21 +346,14 @@ function createReelCard(reel) {
     return card;
 }
 
-
-function escapeHTML(str) {
-    var div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-// ===== RENDER ALL REELS =====
+// ===== RENDER - Saare reels ko screen par dikhao =====
 function renderReels() {
     var filtered = getFilteredReels();
 
-    // Clear the grid
+    // Pehle grid saaf karo
     reelsGrid.innerHTML = "";
 
-    // Update count
+    // Count update karo - kitne reels dikh rahe hain
     var total = reels.length;
     var showing = filtered.length;
     if (total === showing) {
@@ -337,7 +363,7 @@ function renderReels() {
             "Showing " + showing + " of " + total + " reels";
     }
 
-    // Show empty state or cards
+    // Agar koi reel hi nahi hai toh empty state dikhao
     if (total === 0) {
         emptyState.classList.remove("hidden");
         reelsGrid.classList.add("hidden");
@@ -347,20 +373,21 @@ function renderReels() {
     emptyState.classList.add("hidden");
     reelsGrid.classList.remove("hidden");
 
+    // Agar filter ke baad koi result nahi aaya
     if (filtered.length === 0) {
         reelsGrid.innerHTML =
             '<p style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:40px;">No reels match your search or filters.</p>';
         return;
     }
 
-    // Build cards using forEach (HOF)
+    // Har filtered reel ka card bana ke grid mein daal do
     filtered.forEach(function (reel) {
         var card = createReelCard(reel);
         reelsGrid.appendChild(card);
     });
 }
 
-// ===== DEBOUNCE (bonus feature) =====
+// ===== DEBOUNCE - Search mein har key press par render mat karo, thoda ruko phir karo =====
 function debounce(func, delay) {
     var timer;
     return function () {
@@ -373,20 +400,20 @@ function debounce(func, delay) {
     };
 }
 
-// ===== EVENT LISTENERS =====
+//  EVENT LISTENERS - Buttons aur inputs par actions lagao
 
-// Form submit
+// Form submit hone par reel add karo
 reelForm.addEventListener("submit", handleAddReel);
 
-// Search with debounce
+// Search input mein type kare toh 300ms baad render karo (debounce)
 var debouncedRender = debounce(renderReels, 300);
 searchInput.addEventListener("input", debouncedRender);
 
-// Filter and sort (instant)
+// Category filter ya sort change kare toh turant render karo
 filterCategory.addEventListener("change", renderReels);
 sortOption.addEventListener("change", renderReels);
 
-// Favorites toggle
+// Favorites toggle button
 filterFavoritesBtn.addEventListener("click", function () {
     showOnlyFavorites = !showOnlyFavorites;
     filterFavoritesBtn.classList.toggle("active", showOnlyFavorites);
@@ -396,9 +423,9 @@ filterFavoritesBtn.addEventListener("click", function () {
     renderReels();
 });
 
-// Theme toggle
+// Theme toggle button (dark/light mode)
 themeToggle.addEventListener("click", toggleTheme);
 
-// ===== INIT =====
+//  APP START - Page load hone par theme lagao aur reels dikhao 
 loadTheme();
 renderReels();

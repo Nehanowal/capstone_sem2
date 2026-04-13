@@ -32,3 +32,4 @@ Just open `index.html` in a browser. That's it.
 - HTML, CSS, JavaScript
 - noembed.com API for fetching reel metadata
 - localStorage for saving data
+https://capstone-sem2-lilac.vercel.app/
